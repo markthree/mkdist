@@ -2,7 +2,7 @@ import { resolve } from 'pathe'
 import { readFile } from 'fs-extra'
 import { mkdist } from '../src/make'
 import { createLoader } from '../src/loader'
-import { jsLoader, vueLoader } from '../src/loaders'
+import { jsLoader, sassLoader, vueLoader } from '../src/loaders'
 
 describe('mkdist', () => {
   it('mkdist', async () => {
@@ -94,6 +94,18 @@ describe('createLoader', () => {
       path: 'test.vue'
     })
     expect(results).toMatchObject([{ contents: ['<script foo>', 'Test;', '</script>'].join('\n') }])
+  })
+
+  it('vueLoader handles style tags', async () => {
+    const { loadFile } = createLoader({
+      loaders: [vueLoader, sassLoader]
+    })
+    const results = await loadFile({
+      extension: '.vue',
+      getContents: () => '<style scoped lang="scss">$color: red; :root { background-color: $color }</style>',
+      path: 'test.vue'
+    })
+    expect(results).toMatchObject([{ contents: ['<style scoped>', ':root {', '  background-color: red;', '}', '</style>'].join('\n') }])
   })
 
   it('vueLoader bypass <script setup>', async () => {
